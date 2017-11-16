@@ -16,9 +16,6 @@ def main():
 
     picture.save("picture.png")
 
-#TODO:
-#cloud color as a function of sun
-#
 
 
 

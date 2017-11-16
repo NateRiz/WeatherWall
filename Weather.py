@@ -1,10 +1,12 @@
 import math
+import requests
+from datetime import datetime
+from datetime import timedelta
+from random import randint
 from PIL import Image
 from PIL import ImageDraw
 from PIL import ImageFont
 from PIL import ImageEnhance
-import requests
-from random import randint
 
 
 
@@ -17,10 +19,11 @@ class Weather:
         self.sunset = sun_dict["sunset"]
         self.current = sun_dict["current"]
         self.draw = ImageDraw.Draw(picture)
-        self.sun_color = (255, 255, 0)
+        self.sun_color = None
         self.sun_y = None
         self.key="19d529bdd19d3b8ff0c1f2151c494534"
         self.zipcode = str(zipcode)
+        self.season = self.get_season()
         self.load_assets()
 
 
@@ -30,12 +33,13 @@ class Weather:
         :return:
         """
         sunXY = self.get_sun_coordinates((self.sunrise < self.current and self.current<self.sunset))
-        self.draw.ellipse((sunXY[0] - 48, sunXY[1] - 48, sunXY[0] + 48, sunXY[1] + 48), fill=self.sun_color)
         if self.current<self.sunrise or self.current>self.sunset:
-            self.sun_color = (255,255,200)
+            self.sun_color = (255,255,215)
         else:
             self.sun_color = (255,255,0)
+        print(sunXY,self.sun_color)
 
+        self.draw.ellipse((sunXY[0] - 48, sunXY[1] - 48, sunXY[0] + 48, sunXY[1] + 48), fill=self.sun_color)
 
     def get_sun_coordinates(self, isDay):
         """
@@ -47,9 +51,10 @@ class Weather:
             current = self.current
             if self.current < self.sunrise:
                 current = self.current + (24 * 60)
-            if self.current > self.sunset:
+            elif self.current > self.sunset:
                 current = self.current
-            print("Error. Sun out during the night.\n{}\n{}\n{}".format(self.current, self.sunrise, self.sunset))
+            else:
+                print("Error. Sun out during the night.\n{}\n{}\n{}".format(self.current, self.sunrise, self.sunset))
             sunrise = self.sunset
             sunset = (24*60) + self.sunrise
         else:
@@ -128,6 +133,37 @@ class Weather:
                                    position, self.clouds[i%len(self.clouds)])
 
 
+    def get_season(self):
+        """
+        gets season based on current day.
+        :return: season
+        """
+        day = datetime.now()
+        season = ""
+        if (day < datetime(datetime.now().year, 3, 21)) or (day > datetime(datetime.now().year, 12, 20)):
+            season = "Winter"
+        elif (day < datetime(datetime.now().year, 6, 21)):
+            season = "Spring"
+        elif (day < datetime(datetime.now().year, 9, 21)):
+            season = "Summer"
+        else:
+            season = "Fall"
+        return season
+
+
+    def draw_ground(self):
+        sun_sky_color_multiplier = .25+ .75*(1+self.sun_y)/2  #-1 -> 1 : .25 -> 1
+        season_color={
+            "Winter":(255, 255, 255),
+            "Spring":(153, 255, 153),
+            "Summer":(51, 255, 51),
+            "Fall":(51, 102, 0)
+        }
+        ground = Image.new("RGB",(self.RESOLUTION[0],300), season_color[self.season])
+        ground_lighting = ImageEnhance.Brightness(ground)
+        ground = ground_lighting.enhance(sun_sky_color_multiplier)
+        self.picture.paste(ground,(0,self.RESOLUTION[1]-300))
+
 
     def update(self):
         """
@@ -139,6 +175,7 @@ class Weather:
         self.drawPlanet()
         weather = self.get_weather()
         self.draw_clouds(weather["clouds"]["all"])
+        self.draw_ground()
 
 
         self.write_text(weather["main"]["temp"], weather["weather"][0]["description"].title())

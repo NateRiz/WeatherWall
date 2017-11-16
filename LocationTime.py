@@ -21,6 +21,7 @@ class LocationTime:
 
         response = requests.get(url)
         json = response.json()
+        print(json)
         self.zipcode = json["postal"]
         lat_long = json["loc"].split(",")
         location = {"latitude":float(lat_long[0]),
