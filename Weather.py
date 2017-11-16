@@ -11,20 +11,52 @@ from PIL import ImageEnhance
 
 
 class Weather:
-    def __init__(self, resolution, picture, sun_dict, zipcode):
+    def __init__(self, resolution, picture):
         self.RESOLUTION = resolution
         self.picture = picture
-        self.sun_dict = sun_dict
-        self.sunrise = sun_dict["sunrise"]
-        self.sunset = sun_dict["sunset"]
-        self.current = sun_dict["current"]
+        self.sunrise = None
+        self.sunset = None
+        self.current = None
         self.draw = ImageDraw.Draw(picture)
         self.sun_color = None
         self.sun_y = None
         self.key="19d529bdd19d3b8ff0c1f2151c494534"
-        self.zipcode = str(zipcode)
+        self.zipcode = None
         self.season = self.get_season()
         self.load_assets()
+
+    def get_location(self):
+        print("Receiving location...")
+        url = "https://ipinfo.io/json"
+
+        response = requests.get(url)
+        json = response.json()
+        print(json)
+        self.zipcode = json["postal"]
+        lat_long = json["loc"].split(",")
+        location = {"latitude":float(lat_long[0]),
+                    "longitude":float(lat_long[1])
+                    }
+        print("You are in",location)
+        return location
+
+    def get_weather(self):
+        """
+        calls weather api using zipcode and retrieves
+            weather as json
+        :return: json of weather report
+        """
+        weather_request=requests.get("https://api.openweathermap.org/data/2.5/weather?zip="+self.zipcode+",us&appid="+self.key)
+        if weather_request.status_code!=200:
+            print(weather_request.status_code)
+            return
+        json=weather_request.json()
+        self.current = datetime.now().hour*60 + datetime.now().minute
+        sunrise_date = datetime.fromtimestamp(int(json["sys"]["sunrise"]))
+        sunset_date = datetime.fromtimestamp(int(json["sys"]["sunset"]))
+        self.sunrise = sunrise_date.hour*60 + sunrise_date.minute
+        self.sunset = sunset_date.hour*60 + sunset_date.minute
+        return json
 
 
     def drawPlanet(self):
@@ -92,19 +124,6 @@ class Weather:
         self.picture.paste(sky_color, [0, 0, self.RESOLUTION[0], self.RESOLUTION[1]])
 
 
-    def get_weather(self):
-        """
-        calls weather api using zipcode and retrieves
-            weather as json
-        :return: json of weather report
-        """
-        weather_request=requests.get("https://api.openweathermap.org/data/2.5/weather?zip="+self.zipcode+",us&appid="+self.key)
-        if weather_request.status_code!=200:
-            print(weather_request.status_code)
-            return
-        json=weather_request.json()
-        return json
-
     def write_text(self, temp, weather):
         """
         Writes text to the picture of temperature and weather.
@@ -170,10 +189,11 @@ class Weather:
         called to update entire picture.
         """
         print("Updating weather...")
+        self.get_location()
+        weather = self.get_weather()
         self.get_sun_y()
         self.set_sky_color()
         self.drawPlanet()
-        weather = self.get_weather()
         self.draw_clouds(weather["clouds"]["all"])
         self.draw_ground()
 
