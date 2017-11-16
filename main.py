@@ -10,13 +10,15 @@ def main():
     loc_time = LocationTime()
     sun_dict = loc_time.as_dictionary()
     print("Current Time : {}\nSunrise : {}\nSunset : {}".format(sun_dict["current"], sun_dict["sunrise"], sun_dict["sunset"]))
-    weather = Weather(RESOLUTION, picture, sun_dict)
+    weather = Weather(RESOLUTION, picture, sun_dict, loc_time.zipcode)
 
     weather.update()
 
     picture.save("picture.png")
 
-
+#TODO:
+#cloud color as a function of sun
+#
 
 
 
