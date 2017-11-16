@@ -11,7 +11,9 @@ def main():
     sun_dict = loc_time.as_dictionary()
     print("Current Time : {}\nSunrise : {}\nSunset : {}".format(sun_dict["current"], sun_dict["sunrise"], sun_dict["sunset"]))
     weather = Weather(RESOLUTION, picture, sun_dict)
-    weather.drawPlanet()
+
+    weather.update()
+
     picture.save("picture.png")
 
 
