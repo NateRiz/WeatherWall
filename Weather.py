@@ -19,8 +19,8 @@ class Weather:
         self.sun_y = None
         self.key="19d529bdd19d3b8ff0c1f2151c494534"
         self.zipcode = str(zipcode)
-
-        self.malgun = ImageFont.load(r"malgun.ttf")
+        self.malgun64 = ImageFont.truetype(r"malgun.ttf", 64)
+        self.malgun48 = ImageFont.truetype(r"malgun.ttf", 48)
 
 
     def drawPlanet(self):
@@ -67,19 +67,21 @@ class Weather:
         self.picture.paste(sky_color, [0, 0, self.RESOLUTION[0], self.RESOLUTION[1]])
 
 
-
     def getWeather(self):
         weather_request=requests.get("https://api.openweathermap.org/data/2.5/weather?zip="+self.zipcode+",us&appid="+self.key)
         if weather_request.status_code!=200:
             print(weather_request.status_code)
             return
         json=weather_request.json()
-        print(json)
-        weather = json["main"]["temp"]
-        fahrenheit = round((9/5)*(weather-273)+32,2)
-        return fahrenheit
+        temp = json["main"]["temp"]
+        weather = json["weather"][0]["main"]
+        fahrenheit = round((9/5)*(temp-273)+32,2)
+        return [round(fahrenheit), weather.title()]
 
-
+    def write_text(self, temp, weather):
+        text_width = self.malgun48.getsize(text=str(weather))[0]
+        self.draw.text((self.RESOLUTION[0]-text_width - 8, 20), str(temp)+"°", font = self.malgun64)
+        self.draw.text((self.RESOLUTION[0]-text_width - 8, 100), str(weather), font = self.malgun48)
 
     def update(self):
         print("Updating weather...")
@@ -87,7 +89,9 @@ class Weather:
             self.sun_color = (255,255,200)
         else:
             self.sun_color = (255,255,0)
+        self.get_sun_y()
         self.set_sky_color()
         self.drawPlanet()
         temp = self.getWeather()
-        self.draw.text((self.RESOLUTION[0]-100, 20), str(temp), self.malgun)
+        self.write_text(temp[0], temp[1])
+
