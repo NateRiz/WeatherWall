@@ -1,6 +1,5 @@
 import math
 import requests
-from astral import Astral
 from datetime import datetime
 from random import randint
 from PIL import Image
@@ -141,7 +140,6 @@ class Weather:
             self.clouds[i] = self.cloud_lighting[i].enhance(sun_sky_color_multiplier)
 
         n = cloudiness // 10
-        n = 8
         for i in range(n):
             x = (-200 + 500 * i % (self.RESOLUTION[0] - 200)) + randint(0, 500)
             y = randint(0, 400)
