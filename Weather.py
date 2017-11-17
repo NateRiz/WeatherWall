@@ -124,11 +124,31 @@ class Weather:
         :param temp: temperature in Kalvin
         :param weather: description of weather: eg Cloudy
         """
+        GRAY = (224, 224, 224)
+        weekdays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+        months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October",
+                  "November", "December"]
+        day = weekdays[datetime.today().weekday()]
+        date = "{} {}".format(str(datetime.today().day), months[datetime.today().month - 1])
+        day_width, height = self.rockwell48.getsize(text=day)
+        date_width = self.rockwell24.getsize(text=date)[0]
+        temp_width = self.rockwell48.getsize(text=str(temp) + "°")[0]
+        weather_width = self.rockwell24.getsize(text=str(weather))[0]
+        left = max(temp_width + day_width, weather_width + date_width) + 48
+
+        offset_x = 8
+        offset_y = 16
+        sep_x = 24
+        sep_y = 8
+
         temp = int(float(((9 / 5) * (temp - 273) + 32)))
-        temp_width = self.malgun64.getsize(text=str(temp) + "°")[0]
-        weather_width = self.malgun48.getsize(text=str(weather))[0]
-        self.draw.text((self.RESOLUTION[0] - temp_width - 8, 20), str(temp) + "°", font=self.malgun64)
-        self.draw.text((self.RESOLUTION[0] - weather_width - 8, 100), str(weather), font=self.malgun48)
+        self.draw.text((self.RESOLUTION[0] - left - offset_x, offset_y), day, font=self.rockwell48, fill=GRAY)
+        self.draw.text((self.RESOLUTION[0] - left - offset_x + day_width + sep_x, offset_y),
+                       str(temp) + "°", font=self.rockwell48, fill=GRAY)
+        self.draw.text((self.RESOLUTION[0] - left - offset_x, offset_y + height + sep_y),
+                       date, font=self.rockwell24, fill=GRAY)
+        self.draw.text((self.RESOLUTION[0] - left - offset_x + date_width + sep_x,
+                        offset_y + height + sep_y), str(weather), font=self.rockwell24, fill=GRAY)
 
     def draw_clouds(self, cloudiness):
         """
@@ -199,7 +219,7 @@ class Weather:
         loads all of 'assets' folder
         :return:
         """
-        self.malgun64 = ImageFont.truetype(r"malgun.ttf", 64)
-        self.malgun48 = ImageFont.truetype(r"malgun.ttf", 48)
+        self.rockwell48 = ImageFont.truetype(r"assets/ROCKB.ttf", 48)
+        self.rockwell24 = ImageFont.truetype(r"assets/ROCKB.ttf", 24)
         self.clouds = [Image.open("assets/cloud{}.png".format(str(i))).convert("RGBA") for i in range(4)]
         self.cloud_lighting = [ImageEnhance.Brightness(i) for i in self.clouds]
