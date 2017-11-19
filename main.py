@@ -8,6 +8,8 @@ RESOLUTION = (1920, 1080)
 def main():
     picture = Image.new("RGB",RESOLUTION, 0)
     weather = Weather(RESOLUTION, picture)
+    if not weather.key:
+        return
     while 1:
         weather.update()
         picture.save("picture.png")

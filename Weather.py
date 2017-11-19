@@ -18,10 +18,24 @@ class Weather:
         self.draw = ImageDraw.Draw(picture)
         self.sun_color = None
         self.sun_y = None
-        self.key = "19d529bdd19d3b8ff0c1f2151c494534"
+        self.key = self.get_api_key()
         self.zipcode = None
         self.season = self.get_season()
         self.load_assets()
+    def get_api_key(self):
+        """
+        retrieves api key from api.txt and terminates otherwise.
+        :return: key if api is found - None otherwise
+        """
+        with open("api.txt","r") as api_file:
+            key = api_file.readline().strip()
+            if key == "" or key == "{API HERE}":
+                print("An API key is required to use this program.\n"
+                      "Please create one at:\n "
+                      "https://openweathermap.org/current")
+            else:
+                return key
+        return None
 
     def get_location(self):
         print("Receiving location...")
